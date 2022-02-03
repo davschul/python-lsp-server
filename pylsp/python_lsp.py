@@ -6,6 +6,7 @@ import logging
 import os
 import socketserver
 import threading
+import asyncio
 
 from pylsp_jsonrpc.dispatchers import MethodDispatcher
 from pylsp_jsonrpc.endpoint import Endpoint
@@ -115,7 +116,11 @@ class PythonLSPServer(MethodDispatcher):
 
     def start(self):
         """Entry point for the server."""
-        self._jsonrpc_stream_reader.listen(self._endpoint.consume)
+        asyncio.run(self.start_async())
+
+    async def start_async(self):
+        self._endpoint.init_async()
+        await asyncio.create_task(self._jsonrpc_stream_reader.listen_async(self._endpoint.consume_async))
 
     def __getitem__(self, item):
         """Override getitem to fallback through multiple dispatchers."""
